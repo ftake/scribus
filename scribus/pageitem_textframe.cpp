@@ -2172,28 +2172,6 @@ void PageItem_TextFrame::layout()
 			{
 				current.xPos = qMax(current.xPos, current.colLeft);
 			}
-			// remember possible break
-			if (shapedText.haveMoreText(i + 1, glyphClusters))
-			{
-				const GlyphCluster& nextCluster = glyphClusters[i + 1];
-				if (nextCluster.hasFlag(ScLayout_LineBoundary))
-				{
-					// #16100: why preventing possible line break when there are two
-					// consecutive line break opportunities? This is bad for CJK. /
-					if (/*!current.glyphs[currentIndex].hasFlag(ScLayout_LineBoundary)
-						&&*/ !current.glyphs[currentIndex].hasFlag(ScLayout_HyphenationPossible)
-						&& (itemText.text(a) != '-')
-						&& (itemText.text(a) != SpecialChars::SHYPHEN))
-					{
-						current.rememberBreak(i, breakPos, style.rightMargin());
-					}
-				}
-			}
-			if (HasObject)
-			{
-//				qDebug() << "rememberBreak object @" << i;
-				current.rememberBreak(i, breakPos, style.rightMargin());
-			}
 
 			//check against space before PARSEP
 			/*if (SpecialChars::isBreakingSpace(hl->ch) && (a + 1 < itemText.length()) && (itemText.item(a+1)->ch == SpecialChars::PARSEP))
@@ -2807,6 +2785,33 @@ void PageItem_TextFrame::layout()
 					}
 				}
 			}
+			else
+			{
+				// not out
+				// remember possible break after this glyph
+				if (shapedText.haveMoreText(i + 1, glyphClusters))
+				{
+					const GlyphCluster& nextCluster = glyphClusters[i + 1];
+					if (nextCluster.hasFlag(ScLayout_LineBoundary))
+					{
+						// #16100: why preventing possible line break when there are two
+						// consecutive line break opportunities? This is bad for CJK. /
+						if (/*!current.glyphs[currentIndex].hasFlag(ScLayout_LineBoundary)
+							&&*/ !current.glyphs[currentIndex].hasFlag(ScLayout_HyphenationPossible)
+							&& (itemText.text(a) != '-')
+							&& (itemText.text(a) != SpecialChars::SHYPHEN))
+						{
+							current.rememberBreak(i, current.xPos, style.rightMargin());
+						}
+					}
+				}
+				if (HasObject)
+				{
+	//				qDebug() << "rememberBreak object @" << i;
+					current.rememberBreak(i, current.xPos, style.rightMargin());
+				}
+			}
+
 			if (!shapedText.haveMoreText(i + 1, glyphClusters))
 			{
 				if (!current.afterOverflow || current.addLine)
